@@ -212,6 +212,134 @@ See [sdk/README.md](sdk/README.md) for:
 - Architecture overview
 - More examples
 
+## Demo Data Generation
+
+ModelDrift includes scripts to generate realistic demo data for testing drift detection and building dashboards.
+
+### Why Demo Data?
+
+The demo data creates two time periods:
+
+1. **Baseline Data (300 predictions)**: Healthier credit profiles
+   - Lower credit utilization (15-50%)
+   - Lower debt-to-income (10-40%)
+   - Older accounts (60-180 months)
+   - Fewer recent inquiries (0-2)
+   - More accurate predictions
+
+2. **Current Data (200 predictions)**: Riskier profiles showing drift
+   - Higher credit utilization (50-95%)
+   - Higher debt-to-income (40-85%)
+   - Newer accounts (12-60 months)
+   - More recent inquiries (2-8)
+   - Less accurate predictions (showing degradation)
+
+This allows testing drift detection, accuracy drop detection, and dashboard visualizations.
+
+### Generate Demo Data
+
+**Prerequisites:** Backend must be running
+
+```bash
+cd backend
+python -m uvicorn app.main:app --reload
+```
+
+Then in another terminal:
+
+```bash
+cd scripts
+python generate_demo_data.py
+```
+
+**Output:**
+```
+🚀 ModelDrift Demo Data Generator
+
+✅ Connected to ModelDrift backend
+
+📊 Generating baseline data (healthier profiles)...
+  ✅ Baseline: 50/300 predictions
+  ✅ Baseline: 100/300 predictions
+  ...
+  ✅ Baseline complete: 300 predictions, 240 labels
+
+📊 Generating current data (riskier profiles - showing drift)...
+  ✅ Current: 50/200 predictions
+  ...
+  ✅ Current complete: 200 predictions, 180 labels
+
+📈 Demo Data Summary:
+  Baseline predictions:  300
+  Baseline labels:       240
+  Current predictions:   200
+  Current labels:        180
+  Total predictions:     500
+  Total labels:          420
+
+✅ Demo data generation complete!
+```
+
+### Reset Demo Data
+
+Clear all predictions and labels from the database:
+
+```bash
+python scripts/reset_demo_data.py
+```
+
+**Prompt:**
+```
+🗑️  ModelDrift Demo Data Reset
+
+📊 Current data in database:
+  Predictions:       500
+  Ground truth labels: 420
+
+⚠️  Are you sure you want to delete all predictions and labels? (yes/no): yes
+
+✅ Reset Complete!
+  Deleted 420 ground truth labels
+  Deleted 500 predictions
+  Total records removed: 920
+```
+
+### Verify Demo Data
+
+After generating demo data, verify it's in the database:
+
+```bash
+# Recent predictions
+curl http://localhost:8000/api/v1/predictions/recent?limit=20
+
+# Recent labels
+curl http://localhost:8000/api/v1/labels/recent?limit=20
+
+# Or use Swagger UI: http://localhost:8000/docs
+```
+
+Sample response:
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "model_name": "credit_risk",
+    "model_version": "v1",
+    "prediction_id": "baseline_0001",
+    "input_features": {
+      "credit_utilization": 0.35,
+      "debt_to_income": 0.25,
+      "num_recent_inquiries": 1,
+      "avg_account_age_months": 120,
+      "num_open_accounts": 4
+    },
+    "prediction": "low_risk",
+    "confidence": 0.92,
+    "created_at": "2026-05-21T10:30:45.123456"
+  }
+]
+```
+
 ## API Endpoints
 
 ### Health Check
@@ -548,6 +676,22 @@ curl http://localhost:8000/api/v1/labels/recent?limit=5
 
 Or view in Swagger UI: http://localhost:8000/docs
 
+### Demo Data Generation
+
+Generate realistic test data for drift detection and dashboard testing:
+
+```bash
+# Generate 500 predictions (300 baseline + 200 current)
+python scripts/generate_demo_data.py
+
+# Verify data was created
+curl http://localhost:8000/api/v1/predictions/recent?limit=10
+
+# Reset and regenerate
+python scripts/reset_demo_data.py  # Clear old data
+python scripts/generate_demo_data.py  # Create new data
+```
+
 ## Development Notes
 
 - Backend uses FastAPI with auto-reloading
@@ -560,11 +704,12 @@ Or view in Swagger UI: http://localhost:8000/docs
 1. ✅ Phase 1: Project scaffold (completed)
 2. ✅ Phase 2: Backend data ingestion (completed)
 3. ✅ Phase 3: Python SDK Logger (completed)
-4. 🔲 Phase 4: Drift detection algorithms
-5. 🔲 Phase 5: Model training pipeline
-6. 🔲 Phase 6: Auto-retraining triggers
-7. 🔲 Phase 7: Monitoring dashboard
-8. 🔲 Phase 8: Real-time alerts
+4. ✅ Phase 4: Demo Data Generation (completed)
+5. 🔲 Phase 5: Drift detection algorithms
+6. 🔲 Phase 6: Model training pipeline
+7. 🔲 Phase 7: Auto-retraining triggers
+8. 🔲 Phase 8: Monitoring dashboard
+9. 🔲 Phase 9: Real-time alerts
 
 ## License
 
