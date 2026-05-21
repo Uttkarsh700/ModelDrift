@@ -25,9 +25,9 @@ modeldrift/
 │   │   ├── core/           # Configuration
 │   │   ├── api/            # Route handlers
 │   │   ├── db/             # Database setup
-│   │   ├── models/         # SQLAlchemy models (placeholder)
-│   │   ├── schemas/        # Pydantic schemas (placeholder)
-│   │   └── services/       # Business logic (placeholder)
+│   │   ├── models/         # SQLAlchemy models
+│   │   ├── schemas/        # Pydantic schemas
+│   │   └── services/       # Business logic
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/                # React + Vite application
@@ -40,6 +40,16 @@ modeldrift/
 │   ├── package.json
 │   ├── vite.config.js
 │   └── index.html
+├── sdk/                     # Python SDK for ML apps
+│   ├── modeldrift/         # SDK package
+│   │   ├── __init__.py
+│   │   └── client.py       # ModelDriftClient
+│   ├── examples/           # Example scripts
+│   │   ├── log_single_prediction.py
+│   │   ├── log_batch_predictions.py
+│   │   └── log_ground_truth.py
+│   ├── pyproject.toml
+│   └── README.md
 ├── ml/                      # ML modules (placeholder)
 │   ├── train.py
 │   ├── evaluate.py
@@ -52,24 +62,28 @@ modeldrift/
 └── README.md
 ```
 
-## Current Phase: Data Ingestion (Phase 2)
+## Current Phase: Python SDK Logger (Phase 3)
 
-This phase implements **backend data ingestion** for model predictions and ground truth labels:
-- ✅ Database models for predictions and labels
-- ✅ Pydantic schemas for request/response validation
-- ✅ SQLAlchemy services for data operations
-- ✅ RESTful API endpoints for predictions and labels
-- ✅ Automatic table creation on app startup
-- ✅ JSONB support for flexible feature storage
+This phase provides a **Python SDK for ML applications** to log predictions and labels:
+- ✅ ModelDriftClient class for easy integration
+- ✅ `log_prediction()` method for inference logging
+- ✅ `log_ground_truth()` method for outcome tracking
+- ✅ Clear error handling for common issues
+- ✅ Three example scripts for different use cases
+- ✅ No authentication required (development phase)
+
+**Phase 2 (Completed):**
+- Backend FastAPI data ingestion system
+- Database models for predictions and labels
+- RESTful API endpoints for predictions and labels
 
 **Phase 1 (Completed):**
 - Project structure and folder hierarchy
 - Backend FastAPI setup with health check endpoint
 - Frontend React setup with basic pages
 - Docker Compose configuration for all services
-- Database and cache connections (configured)
 
-**Coming Later (Phase 3+):**
+**Coming Later (Phase 4+):**
 - Drift detection algorithms
 - Model training and evaluation
 - Auto-retraining triggers
@@ -130,6 +144,73 @@ npm install
 # Start development server
 npm run dev
 ```
+
+## Using the Python SDK
+
+The SDK allows any ML application to easily log predictions and outcomes to ModelDrift.
+
+### Install SDK
+
+```bash
+cd sdk
+
+# Install in development mode
+pip install -e .
+```
+
+### Quick Example
+
+```python
+from modeldrift import ModelDriftClient
+
+# Initialize client
+client = ModelDriftClient(base_url="http://localhost:8000")
+
+# Log a prediction
+client.log_prediction(
+    model_name="credit_risk",
+    model_version="v1",
+    prediction_id="pred_001",
+    input_features={
+        "credit_utilization": 0.72,
+        "debt_to_income": 0.43,
+        "num_recent_inquiries": 3
+    },
+    prediction="high_risk",
+    confidence=0.91
+)
+
+# Later, when ground truth is available
+client.log_ground_truth(
+    prediction_id="pred_001",
+    actual_label="default"
+)
+
+client.close()
+```
+
+### Run Examples
+
+```bash
+cd sdk
+
+# Log single prediction
+python examples/log_single_prediction.py
+
+# Log 20 sample predictions
+python examples/log_batch_predictions.py
+
+# Log ground truth labels
+python examples/log_ground_truth.py
+```
+
+### SDK Documentation
+
+See [sdk/README.md](sdk/README.md) for:
+- Complete API reference
+- Error handling examples
+- Architecture overview
+- More examples
 
 ## API Endpoints
 
@@ -435,6 +516,38 @@ redis-cli
 # Should connect successfully
 ```
 
+### SDK Testing
+
+Test the Python SDK with example scripts:
+
+```bash
+cd sdk
+
+# Run single prediction example
+python examples/log_single_prediction.py
+# Expected: ✅ Prediction logged successfully!
+
+# Run batch predictions example
+python examples/log_batch_predictions.py
+# Expected: ✅ All predictions logged successfully!
+
+# Run ground truth example
+python examples/log_ground_truth.py
+# Expected: ✅ All labels logged successfully!
+```
+
+Verify data in backend:
+
+```bash
+# Check recent predictions
+curl http://localhost:8000/api/v1/predictions/recent?limit=5
+
+# Check recent labels
+curl http://localhost:8000/api/v1/labels/recent?limit=5
+```
+
+Or view in Swagger UI: http://localhost:8000/docs
+
 ## Development Notes
 
 - Backend uses FastAPI with auto-reloading
@@ -444,14 +557,14 @@ redis-cli
 
 ## Next Steps
 
-1. Add drift detection algorithms to `ml/`
-2. Implement model training with scikit-learn
-3. Add MLflow integration
-4. Create database models for tracking metrics
-5. Build monitoring dashboard in React
-6. Implement auto-retraining logic
-7. Add authentication and authorization
-8. Create data pipeline for ingesting predictions
+1. ✅ Phase 1: Project scaffold (completed)
+2. ✅ Phase 2: Backend data ingestion (completed)
+3. ✅ Phase 3: Python SDK Logger (completed)
+4. 🔲 Phase 4: Drift detection algorithms
+5. 🔲 Phase 5: Model training pipeline
+6. 🔲 Phase 6: Auto-retraining triggers
+7. 🔲 Phase 7: Monitoring dashboard
+8. 🔲 Phase 8: Real-time alerts
 
 ## License
 
