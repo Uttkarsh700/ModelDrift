@@ -1,0 +1,100 @@
+name: ModelDrift Retraining Pipeline
+
+# Trigger 1: Manual dispatch from GitHub UI or API
+on:
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: 'Model name'
+        required: false
+        default: 'credit_risk'
+      model_version:
+        description: 'Model version'
+        required: false
+        default: 'v1'
+      trigger_reason:
+        description: 'Reason for triggering'
+        required: false
+        default: 'manual'
+
+  # Trigger 2: Automatic on push to main if ML or backend files changed
+  push:
+    branches:
+      - main
+    paths:
+      - 'ml/**'
+      - 'backend/**'
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    name: Train and Compare Models
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Python 3.11
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # Step 3: Install backend dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      # Step 4: Run retraining script
+      - name: Run retraining pipeline
+        run: |
+          python ml/retrain_model.py
+        env:
+          # Use GitHub Actions default environment variables
+          MLFLOW_TRACKING_URI: 'file:///tmp/mlflow'
+
+      # Step 5: Run model comparison
+      - name: Compare models and display champion
+        run: |
+          python ml/compare_models.py
+        env:
+          MLFLOW_TRACKING_URI: 'file:///tmp/mlflow'
+
+      # Step 6: Upload trained model artifact
+      - name: Upload trained model
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-model
+          path: ml/models/credit_risk_latest.pkl
+          retention-days: 30
+          if-no-files-found: ignore
+
+      # Step 7: Upload MLflow artifacts (if available)
+      - name: Upload MLflow runs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlflow-runs
+          path: /tmp/mlflow
+          retention-days: 30
+          if-no-files-found: ignore
+
+      # Step 8: Print summary
+      - name: Print workflow summary
+        if: always()
+        run: |
+          echo "🎯 Retraining Workflow Summary"
+          echo "=============================="
+          echo "Model: ${{ github.event.inputs.model_name || 'credit_risk' }}"
+          echo "Version: ${{ github.event.inputs.model_version || 'v1' }}"
+          echo "Reason: ${{ github.event.inputs.trigger_reason || 'automatic' }}"
+          echo "Ref: ${{ github.ref_name }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo ""
+          echo "📦 Artifacts uploaded:"
+          echo "  - trained-model (ml/models/credit_risk_latest.pkl)"
+          echo "  - mlflow-runs (/tmp/mlflow)"

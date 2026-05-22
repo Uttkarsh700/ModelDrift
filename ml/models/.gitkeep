@@ -1,0 +1,2 @@
+# This directory stores trained ML models locally
+# Models are saved during retraining pipeline as .pkl files

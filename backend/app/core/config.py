@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     # MLflow
     MLFLOW_TRACKING_URI: str = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
     
+    # GitHub Actions (optional - for triggering workflows)
+    GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
+    GITHUB_OWNER: str = os.getenv("GITHUB_OWNER", "")
+    GITHUB_REPO: str = os.getenv("GITHUB_REPO", "")
+    GITHUB_WORKFLOW_FILE: str = os.getenv("GITHUB_WORKFLOW_FILE", "retrain-model.yml")
+    GITHUB_REF: str = os.getenv("GITHUB_REF", "main")
+    
     class Config:
         env_file = ".env"
 

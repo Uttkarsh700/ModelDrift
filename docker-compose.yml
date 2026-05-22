@@ -65,6 +65,25 @@ services:
       - ./backend:/app
     command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  # Celery Worker for background tasks (retraining)
+  celery_worker:
+    build: ./backend
+    container_name: modeldrift-celery-worker
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/modeldrift
+      REDIS_URL: redis://redis:6379
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DEBUG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./ml:/app/ml
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+
   # React Frontend
   frontend:
     build: ./frontend
