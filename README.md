@@ -62,33 +62,44 @@ modeldrift/
 └── README.md
 ```
 
-## Current Phase: Alert System & System Health (Phase 12)
+## Current Phase: Drift Analysis Dashboard (Phase 13)
 
-This phase adds **database-backed alerts** for monitoring system issues and **system health dashboard**:
-- ✅ Alert storage in PostgreSQL with severity and source tracking
-- ✅ Automatic alert creation for drift, retraining, GitHub Actions issues
-- ✅ Alert resolution with timestamps
-- ✅ Active alerts section showing unresolved issues
-- ✅ Complete alert history table (last 50 alerts)
-- ✅ System health card showing component status
-- ✅ Alerts page with KPI cards (total, active, critical, resolved)
-- ✅ Demo alert seeding
-- ✅ 5 API endpoints for alerts management
-- ✅ AlertCard component for display
-- ✅ Auto-refresh every 10 seconds
+This phase adds a **dedicated Drift Analysis page** for comprehensive model drift monitoring:
+- ✅ Dedicated page with Overview → Drift Analysis → Retraining → Experiments → Alerts navigation
+- ✅ 6 KPI metric cards (Overall Drift Level, Average PSI, Maximum PSI, Current Accuracy, Accuracy Drop, High Drift Features)
+- ✅ Explanation card: what PSI and KS-test mean in simple terms
+- ✅ PSI interpretation card: visual thresholds (low < 0.10, medium 0.10-0.25, high ≥ 0.25)
+- ✅ PSI bar chart by feature (Recharts)
+- ✅ KS-test statistics bar chart by feature (Recharts)
+- ✅ Feature drift table with PSI, KS stats, p-values, and drift level
+- ✅ Retraining recommendation card: smart logic for when to retrain
+- ✅ "Run Drift Check" button for manual drift calculations
+- ✅ Loading, error, and empty states
+- ✅ 30-second auto-refresh polling
 
 **Key Concepts:**
-- **Alert**: Notification of a system issue (drift, retraining failure, config problem)
-- **Severity**: info (blue), warning (yellow), critical (red)
-- **Source**: Where the alert originated (drift, retraining, github_actions, system)
-- **Status**: active (unresolved) or resolved
-- **System Health**: Shows status of key components (API, GitHub Actions, PostgreSQL, Redis)
+- **PSI (Population Stability Index)**: Measures how much a feature's distribution changed (0-1 scale, higher = more drift)
+- **KS-Test (Kolmogorov-Smirnov)**: Statistical test checking if baseline and current data are different
+- **Drift Level**: Categorized as low (PSI < 0.10), medium (0.10 ≤ PSI < 0.25), or high (PSI ≥ 0.25)
+- **Retraining Logic**: Recommended if overall_drift_level == "high" OR accuracy_drop >= 10%
 
-**Alert Creation Rules:**
-1. **High drift detected** - If overall_drift_level == "high" → CRITICAL
-2. **Accuracy drop detected** - If accuracy_drop >= 0.10 → WARNING
-3. **Retraining failed** - If retraining job fails → CRITICAL
-4. **GitHub Actions not configured** - If credentials missing → WARNING
+**Page Layout:**
+1. Page title & subtitle
+2. KPI cards row
+3. Explanation card
+4. PSI interpretation card
+5. PSI chart
+6. KS-test chart
+7. Feature drift table
+8. Retraining recommendation
+9. Run Drift Check button
+
+**Phase 12 (Completed):**
+- Alert system & system health dashboard
+- Database-backed alerts with severity tracking
+- Automatic alert creation on drift/retraining/GitHub config
+- Alert resolution with timestamps
+- System health card showing component status
 
 **Phase 11 (Completed):**
 - Model registry and promotion simulation
@@ -128,11 +139,11 @@ This phase adds **database-backed alerts** for monitoring system issues and **sy
 - Phase 2: Backend data ingestion
 - Phase 1: Project scaffold
 
-**Coming Later (Phase 13+):**
-- Model serving & predictions API
+**Coming Later (Phase 14+):**
 - A/B testing and shadow deployment
 - Scheduled retraining
-- Real-time alerts
+- Model serving & predictions API
+- Real-time alerts with WebSockets
 
 ## Quick Start
 
@@ -2391,6 +2402,247 @@ curl -X POST http://localhost:8000/api/v1/alerts/{alert_id}/resolve
 - Verify Backend API status shows green (if backend running)
 - Verify other statuses appear with proper colors
 
+## Drift Analysis Dashboard (Phase 13)
+
+This phase adds a **dedicated Drift Analysis page** for comprehensive model drift monitoring and interpretation.
+
+### What is Drift Analysis?
+
+Drift Analysis helps detect and visualize when your model's input data distribution changes over time. This is critical because:
+1. **Data drift** (input distribution changes) can make models less accurate
+2. **Early detection** allows proactive retraining before accuracy degrades
+3. **Feature-level analysis** identifies which specific features are drifting
+4. **Actionable recommendations** tell you when retraining is needed
+
+### Drift Analysis Page Features
+
+**1. KPI Cards** (top row)
+- **Overall Drift Level**: Summary of drift across all features (low/medium/high)
+- **Average PSI**: Average Population Stability Index across features
+- **Maximum PSI**: Highest PSI score among all features
+- **Current Accuracy**: Model's current accuracy on recent data
+- **Accuracy Drop**: How much accuracy has decreased since baseline
+- **High Drift Features**: Count of features with high drift (PSI ≥ 0.25)
+
+**2. Explanation Card**
+Explains key concepts in simple language:
+- PSI (Population Stability Index): How much a feature's distribution changed (0-1 scale)
+- KS-Test (Kolmogorov-Smirnov): Statistical test for distribution changes
+- When to worry: High PSI or big accuracy drop usually means retraining is needed
+
+**3. PSI Interpretation Card**
+Visual reference for PSI thresholds:
+- **Low Drift**: PSI < 0.10 (green) - Normal, no action needed
+- **Medium Drift**: 0.10 ≤ PSI < 0.25 (yellow) - Monitor closely
+- **High Drift**: PSI ≥ 0.25 (red) - Retraining recommended
+
+**4. Charts**
+- **PSI Scores by Feature**: Bar chart showing PSI for each feature (easy to spot which features drifted)
+- **KS-Test Statistics by Feature**: Bar chart showing KS statistic for each feature (statistical significance)
+
+**5. Feature Drift Table**
+Detailed table with:
+- Feature name
+- PSI score (with 3 decimal precision)
+- KS statistic (statistical test value)
+- KS p-value (significance level)
+- Drift level (low/medium/high badge)
+
+**6. Retraining Recommendation**
+Smart logic that shows:
+- "Retraining Recommended" (red badge) if:
+  - Overall drift level is HIGH, OR
+  - Accuracy dropped by 10% or more
+- "Monitoring Only" (green badge) if:
+  - Drift is within acceptable levels AND
+  - Accuracy drop is less than 10%
+- Shows the specific reason for the recommendation
+
+**7. Run Drift Check Button**
+- Manually trigger drift calculation
+- Shows "Running Drift Check..." while processing
+- Auto-refreshes page after 1.5 seconds
+- Shows success/error message
+
+### Understanding PSI and KS-Test
+
+**PSI (Population Stability Index)**
+
+Formula: PSI = Σ (% current - % baseline) × ln(% current / % baseline)
+
+What it means:
+- Ranges from 0 (identical distributions) to ∞ (completely different)
+- Practical thresholds:
+  - 0.00-0.10: No significant difference
+  - 0.10-0.25: Some difference, monitor
+  - 0.25+: Significant difference, consider retraining
+
+Example:
+- If a feature's age distribution shifted toward older customers, PSI would be high
+- If credit limit distribution is nearly identical to baseline, PSI would be low
+
+**KS-Test (Kolmogorov-Smirnov Test)**
+
+What it means:
+- Tests whether two samples come from the same distribution
+- KS Statistic: Maximum distance between cumulative distribution functions (0-1)
+- p-value: Probability that distributions are the same (0-1)
+  - p > 0.05: Likely same distribution
+  - p < 0.05: Likely different distribution
+
+Example:
+- KS = 0.15, p-value = 0.001 → Different distribution (statistically significant)
+- KS = 0.05, p-value = 0.8 → Same distribution (not significant)
+
+### When to Retrain
+
+**Retraining Recommended When:**
+1. Overall drift level is HIGH (average PSI ≥ 0.25), OR
+2. Accuracy has dropped by 10% or more
+
+**Example Scenarios:**
+
+Scenario A: High Drift, No Accuracy Drop
+- Average PSI = 0.30 (high)
+- Accuracy drop = 2%
+- Recommendation: Retrain (drift is significant)
+- Why: Even if accuracy hasn't dropped yet, the data has changed enough to affect model performance soon
+
+Scenario B: Low Drift, High Accuracy Drop
+- Average PSI = 0.05 (low)
+- Accuracy drop = 12%
+- Recommendation: Retrain (accuracy degraded)
+- Why: Something is wrong even if drift is low; retraining needed
+
+Scenario C: Low Drift, Low Accuracy Drop
+- Average PSI = 0.02 (low)
+- Accuracy drop = 1%
+- Recommendation: Monitoring Only
+- Why: Everything looks normal; just monitor
+
+### Files for Phase 13
+
+**Frontend New Files:**
+- `frontend/src/pages/DriftAnalysis.jsx` (320+ lines)
+  - Main page component with all features
+  - Fetches drift summary and metrics
+  - Renders KPI cards, charts, table, recommendations
+  - Handles manual drift checks
+  - Auto-refreshes every 30 seconds
+
+**Frontend Updated Files:**
+- `frontend/src/App.jsx` - Added DriftAnalysis import and route
+- `frontend/src/components/Sidebar.jsx` - Enabled Drift Analysis nav item
+- `frontend/src/styles.css` - Added ~200 lines for drift page styling
+
+**API Endpoints Used (No New Endpoints Needed):**
+- GET `/api/v1/drift/summary` - Get drift summary statistics
+- GET `/api/v1/drift/latest` - Get latest drift metrics with features
+- POST `/api/v1/drift/run` - Manually trigger drift calculation
+
+### How to Use Drift Analysis Page
+
+**1. Generate Demo Data (if not already done)**
+```bash
+cd backend
+python scripts/seed_demo_data.py
+```
+
+**2. Run Drift Check**
+- Go to Drift Analysis page (click 📈 in sidebar)
+- Click "Run Drift Check" button
+- Wait for calculation to complete
+- Page auto-refreshes with new metrics
+
+**3. Interpret Results**
+- Check KPI cards for overall picture
+- Read explanation card if confused about terms
+- Look at charts to identify which features drifted
+- Check retraining recommendation
+- Decide whether to trigger retraining
+
+**4. Take Action**
+- If "Retraining Recommended" → Go to Retraining page and trigger
+- If "Monitoring Only" → Continue monitoring, check again later
+- If High Drift Features → Look at table to see which features to focus on
+
+### Testing Phase 13
+
+**1. View Drift Analysis Page**
+- Click "Drift Analysis" in sidebar (📈)
+- Verify page loads with title "Drift Analysis"
+- Verify subtitle shows about PSI and KS-test
+
+**2. View KPI Cards**
+- Verify 6 cards appear with values
+- Verify colors match drift levels (green=low, yellow=medium, red=high)
+- Click "Run Drift Check" button
+
+**3. Verify Charts Display**
+- PSI chart shows bars for each feature
+- KS-test chart shows bars for each feature
+- Charts are responsive (try resizing browser)
+
+**4. Check Feature Table**
+- Verify all features appear in table
+- Verify PSI, KS, and p-values show
+- Verify drift level badges appear with correct colors
+
+**5. Test Retraining Recommendation**
+- If drift is high or accuracy drop > 10%: Should show red "Retraining Recommended" badge
+- If drift is low and accuracy drop < 10%: Should show green "Monitoring Only" badge
+- Verify reason text shows why
+
+**6. Test Manual Drift Check**
+- Click "Run Drift Check" button
+- Verify loading state shows "Running Drift Check..."
+- Verify success message appears
+- Verify page refreshes with new data
+
+### Quick Commands
+
+```bash
+# View drift summary
+curl http://localhost:8000/api/v1/drift/summary
+
+# View latest drift metrics
+curl http://localhost:8000/api/v1/drift/latest
+
+# Run drift check
+curl -X POST http://localhost:8000/api/v1/drift/run
+
+# Check overall drift level
+curl http://localhost:8000/api/v1/drift/summary | jq '.overall_drift_level'
+
+# Check if retraining recommended (from UI logic)
+curl http://localhost:8000/api/v1/drift/summary | jq '.| {level: .overall_drift_level, accuracy_drop: .accuracy_drop}'
+```
+
+### Common Questions
+
+**Q: Why is my drift high but accuracy drop is low?**
+A: The model is still making good predictions on new data, but the input data has changed significantly. Retraining soon is recommended preventatively.
+
+**Q: What's the difference between PSI and KS-test?**
+A: PSI measures percentage distribution change; KS-test checks statistical significance. Use PSI for business decisions, KS for confirmation.
+
+**Q: Should I always retrain when drift is detected?**
+A: No. Use the recommendation card logic:
+- Retrain if HIGH drift OR accuracy drop > 10%
+- Monitor if drift is medium and accuracy is stable
+
+**Q: How often should I check drift?**
+A: Depends on your use case:
+- Real-time systems: Daily or continuously
+- Batch systems: Weekly or after major data changes
+- Development: When testing new models
+
+**Q: What if my PSI keeps increasing?**
+A: Your production data keeps shifting away from training data. Options:
+1. Retrain with recent data
+2. Adjust baseline if old training data is no longer representative
+3. Add monitoring alerts for high PSI
+
 ## Next Steps
 
 1. ✅ Phase 1: Project scaffold (completed)
@@ -2405,7 +2657,8 @@ curl -X POST http://localhost:8000/api/v1/alerts/{alert_id}/resolve
 10. ✅ Phase 10: Retraining Automation UI (completed)
 11. ✅ Phase 11: Model Registry & Promotion (completed)
 12. ✅ Phase 12: Alert System & System Health (completed)
-13. 🔲 Phase 13: Production deployment & monitoring
+13. ✅ Phase 13: Drift Analysis Dashboard (completed)
+14. 🔲 Phase 14: A/B Testing & Shadow Deployment
 
 ## Installation
 

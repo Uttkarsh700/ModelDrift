@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Overview from './pages/Overview'
+import DriftAnalysis from './pages/DriftAnalysis'
 import Retraining from './pages/Retraining'
 import Experiments from './pages/Experiments'
 import Alerts from './pages/Alerts'
@@ -14,6 +15,8 @@ function App() {
     switch (activePage) {
       case 'overview':
         return <Overview />
+      case 'drift':
+        return <DriftAnalysis />
       case 'retraining':
         return <Retraining />
       case 'experiments':

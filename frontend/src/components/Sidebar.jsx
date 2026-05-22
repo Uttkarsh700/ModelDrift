@@ -3,11 +3,11 @@ import React from 'react'
 const Sidebar = ({ activePage = 'overview', onPageChange = () => { } }) => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'drift', label: 'Drift Analysis', icon: '📈' },
     { id: 'retraining', label: 'Retraining', icon: '🔄' },
     { id: 'experiments', label: 'Experiments', icon: '🧪' },
     { id: 'alerts', label: 'Alerts', icon: '🔔' },
     { id: 'models', label: 'Models', icon: '🤖', disabled: true },
-    { id: 'drift', label: 'Drift Analysis', icon: '📈', disabled: true },
     { id: 'settings', label: 'Settings', icon: '⚙️', disabled: true },
   ]
 
