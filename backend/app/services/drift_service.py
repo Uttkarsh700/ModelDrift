@@ -9,6 +9,7 @@ from app.models.drift_metric import DriftMetric
 from app.models.prediction import Prediction
 from app.models.ground_truth import GroundTruthLabel
 from app.schemas.drift import DriftFeatureDetail, DriftRunResponse
+from app.services.alert_service import AlertService
 
 
 FEATURES_TO_CHECK = [
@@ -220,6 +221,26 @@ def calculate_drift(db: Session, model_name: str, model_version: str) -> DriftRu
         overall_drift_level = "medium"
     else:
         overall_drift_level = "low"
+    
+    # Create alerts for high drift
+    if overall_drift_level == "high":
+        AlertService.create_alert_if_not_exists(
+            db,
+            title="High drift detected",
+            message=f"Overall drift level is HIGH. Multiple features show significant distribution shift.",
+            severity="critical",
+            source="drift"
+        )
+    
+    # Create alerts for accuracy drop
+    if accuracy_drop >= 0.10:
+        AlertService.create_alert_if_not_exists(
+            db,
+            title="Accuracy drop detected",
+            message=f"Accuracy dropped by {(accuracy_drop*100):.1f}% from baseline. Model performance degrading.",
+            severity="warning",
+            source="drift"
+        )
     
     return DriftRunResponse(
         status="success",

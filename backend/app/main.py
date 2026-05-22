@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import health, predictions, labels, drift, training, retraining, github_actions, model_registry
+from app.api.routes import health, predictions, labels, drift, training, retraining, github_actions, model_registry, alerts
 from app.db.database import Base, engine
 from app.core.celery_app import celery_app  # noqa: F401 - needed for workers
 
@@ -12,6 +12,7 @@ from app.models.ground_truth import GroundTruthLabel  # noqa: F401
 from app.models.drift_metric import DriftMetric  # noqa: F401
 from app.models.retraining_run import RetrainingRun  # noqa: F401
 from app.models.model_version import ModelVersion  # noqa: F401
+from app.models.alert import Alert  # noqa: F401
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -45,6 +46,7 @@ app.include_router(training.router)
 app.include_router(retraining.router)
 app.include_router(github_actions.router)
 app.include_router(model_registry.router)
+app.include_router(alerts.router)
 
 
 @app.get("/")

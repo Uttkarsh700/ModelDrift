@@ -5,6 +5,7 @@ import Topbar from './components/Topbar'
 import Overview from './pages/Overview'
 import Retraining from './pages/Retraining'
 import Experiments from './pages/Experiments'
+import Alerts from './pages/Alerts'
 
 function App() {
   const [activePage, setActivePage] = useState('overview')
@@ -17,6 +18,8 @@ function App() {
         return <Retraining />
       case 'experiments':
         return <Experiments />
+      case 'alerts':
+        return <Alerts />
       default:
         return <Overview />
     }

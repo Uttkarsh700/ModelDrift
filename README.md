@@ -62,28 +62,39 @@ modeldrift/
 └── README.md
 ```
 
-## Current Phase: Model Registry & Promotion (Phase 11)
+## Current Phase: Alert System & System Health (Phase 12)
 
-This phase adds **model versioning and promotion simulation** without real cloud deployment:
-- ✅ Database-backed model registry (PostgreSQL)
-- ✅ Champion model (currently deployed, production)
-- ✅ Challenger model (candidate, staging)
-- ✅ Model version tracking (accuracy, F1, drift, artifact path, MLflow run ID)
-- ✅ Automated promotion recommendation logic
-- ✅ One-click promotion to production (archives old champion)
-- ✅ Experiments page with champion vs challenger comparison
-- ✅ Model registry table showing all versions and stages
-- ✅ Demo seed endpoint to populate test data
-- ✅ API endpoints for register, list, compare, and promote
-- ✅ Frontend UI with side-by-side metrics comparison
-- ✅ Responsive design and dark theme consistency
+This phase adds **database-backed alerts** for monitoring system issues and **system health dashboard**:
+- ✅ Alert storage in PostgreSQL with severity and source tracking
+- ✅ Automatic alert creation for drift, retraining, GitHub Actions issues
+- ✅ Alert resolution with timestamps
+- ✅ Active alerts section showing unresolved issues
+- ✅ Complete alert history table (last 50 alerts)
+- ✅ System health card showing component status
+- ✅ Alerts page with KPI cards (total, active, critical, resolved)
+- ✅ Demo alert seeding
+- ✅ 5 API endpoints for alerts management
+- ✅ AlertCard component for display
+- ✅ Auto-refresh every 10 seconds
 
 **Key Concepts:**
-- **Champion**: The production model currently serving predictions
-- **Challenger**: The staging model being tested and evaluated
-- **Promotion**: Moving a challenger to production (archives the old champion)
-- **Registry**: Central database for tracking model versions and metrics
-- **Stages**: production, staging, archived
+- **Alert**: Notification of a system issue (drift, retraining failure, config problem)
+- **Severity**: info (blue), warning (yellow), critical (red)
+- **Source**: Where the alert originated (drift, retraining, github_actions, system)
+- **Status**: active (unresolved) or resolved
+- **System Health**: Shows status of key components (API, GitHub Actions, PostgreSQL, Redis)
+
+**Alert Creation Rules:**
+1. **High drift detected** - If overall_drift_level == "high" → CRITICAL
+2. **Accuracy drop detected** - If accuracy_drop >= 0.10 → WARNING
+3. **Retraining failed** - If retraining job fails → CRITICAL
+4. **GitHub Actions not configured** - If credentials missing → WARNING
+
+**Phase 11 (Completed):**
+- Model registry and promotion simulation
+- Champion vs challenger comparison
+- Automated promotion recommendation
+- One-click promotion to production
 
 **Phase 10 (Completed):**
 - Retraining automation UI with drift metrics
@@ -117,7 +128,7 @@ This phase adds **model versioning and promotion simulation** without real cloud
 - Phase 2: Backend data ingestion
 - Phase 1: Project scaffold
 
-**Coming Later (Phase 12+):**
+**Coming Later (Phase 13+):**
 - Model serving & predictions API
 - A/B testing and shadow deployment
 - Scheduled retraining
@@ -2079,6 +2090,307 @@ POST /api/v1/github-actions/trigger-retraining - Trigger workflow
 - **Responsive**: Mobile-first, works on all screen sizes
 - **Animations**: Slide-in for message alerts, hover effects on buttons
 
+## Alert System & System Health (Phase 12)
+
+This phase adds **database-backed alerts** for monitoring system anomalies and a **system health dashboard** for component status tracking.
+
+### Alert System Features
+
+**What are Alerts?**
+Alerts are notifications of system issues automatically created when problems are detected. Each alert tracks:
+- **Title**: Description of the issue
+- **Message**: Detailed information
+- **Severity**: info (blue) → warning (yellow) → critical (red)
+- **Source**: Where it originated (drift, retraining, github_actions, system)
+- **Status**: active (unresolved) or resolved (fixed)
+- **Timestamps**: When created and resolved
+
+**Automatic Alert Creation:**
+
+1. **High Drift Detected** 
+   - Triggered: When overall_drift_level == "high"
+   - Severity: CRITICAL (red)
+   - Source: drift
+   - Message: Shows drift metrics per feature
+
+2. **Accuracy Drop Detected**
+   - Triggered: When accuracy_drop >= 10%
+   - Severity: WARNING (yellow)
+   - Source: drift
+   - Message: Shows accuracy drop percentage
+
+3. **Retraining Failed**
+   - Triggered: When retraining job fails
+   - Severity: CRITICAL (red)
+   - Source: retraining
+   - Message: Shows error details
+
+4. **GitHub Actions Not Configured**
+   - Triggered: When checking GitHub Actions config and credentials missing
+   - Severity: WARNING (yellow)
+   - Source: github_actions
+   - Message: Instructs how to configure
+
+**Alerts Page (/alerts)**
+
+The Alerts page provides comprehensive monitoring with:
+
+1. **KPI Cards**
+   - Total Alerts: All alerts in database
+   - Active Alerts: Red badge if count > 0
+   - Critical Alerts: Shows CRITICAL severity count
+   - Resolved Alerts: Shows green badge
+
+2. **Active Alerts Section**
+   - Shows up to 20 unresolved alerts
+   - Each card displays:
+     - Color-coded severity badge (critical=red, warning=yellow, info=blue)
+     - Title and full message
+     - Source label with icon (📊 Drift, 🔄 Retraining, 🔷 GitHub Actions, ⚙️ System)
+     - Created timestamp
+     - Resolved timestamp (if resolved)
+     - Resolve button (blue, for active alerts)
+   - "✅ No Active Alerts" message when none exist
+
+3. **System Health Card**
+   - Backend API: Green if /health responds, red if offline
+   - GitHub Actions: Green (configured) or yellow (not configured)
+   - PostgreSQL: Blue (manual status, always shows)
+   - Redis/Celery: Blue (manual status, always shows)
+   - Each item shows status with color-coded border
+
+4. **Demo Seed Button**
+   - Creates 6 sample alerts for testing
+   - Shows success message when complete
+   - Skips if alerts already exist (prevents duplicate demo data)
+   - Useful for UI testing and demonstrations
+
+5. **All Alerts History Table**
+   - Shows last 50 alerts in database
+   - Columns: Severity, Title, Source, Status, Created, Resolved
+   - Color-coded severity badges
+   - Status shows "Active" or "Resolved" with color
+
+**Auto-Refresh & Real-Time Updates**
+- Page auto-refreshes every 10 seconds
+- Fetches summary, active alerts, and all alerts
+- Shows loading state while fetching
+- Handles API errors gracefully
+
+### Backend API Endpoints
+
+#### 1. Get All Alerts
+```bash
+GET /api/v1/alerts?limit=50
+
+# Response
+{
+  "alerts": [
+    {
+      "id": "uuid",
+      "title": "High drift detected",
+      "message": "Overall drift level is HIGH...",
+      "severity": "critical",
+      "source": "drift",
+      "status": "active",
+      "created_at": "2024-01-15T10:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "total_count": 42
+}
+```
+
+#### 2. Get Active Alerts
+```bash
+GET /api/v1/alerts/active
+
+# Response
+{
+  "alerts": [
+    { ...alert object... }
+  ],
+  "total_count": 3
+}
+```
+
+#### 3. Get Alerts Summary
+```bash
+GET /api/v1/alerts/summary
+
+# Response
+{
+  "total": 42,
+  "active": 3,
+  "critical": 2,
+  "warning": 5,
+  "info": 35,
+  "resolved": 39
+}
+```
+
+#### 4. Resolve Alert
+```bash
+POST /api/v1/alerts/{alert_id}/resolve
+
+# Response
+{
+  "status": "success",
+  "alert_id": "uuid",
+  "message": "Alert resolved successfully"
+}
+```
+
+#### 5. Seed Demo Alerts
+```bash
+POST /api/v1/alerts/seed-demo
+
+# Response (if seeded)
+{
+  "message": "Demo alerts seeded successfully",
+  "count": 6
+}
+
+# Response (if already exist)
+{
+  "message": "Alerts table already has data, skipping seed"
+}
+```
+
+### Backend Implementation Details
+
+**New Files Created:**
+
+- `backend/app/models/alert.py`: SQLAlchemy ORM model for alerts table
+- `backend/app/schemas/alert.py`: Pydantic request/response schemas (5 models)
+- `backend/app/services/alert_service.py`: Business logic for alert operations (7 methods)
+- `backend/app/api/routes/alerts.py`: FastAPI router with 5 endpoints
+
+**Updated Files:**
+
+- `backend/app/main.py`: Imported Alert model and alerts router
+- `backend/app/services/drift_service.py`: Create alerts on high drift/accuracy drop
+- `backend/app/tasks/retraining_tasks.py`: Create alerts on retraining failure
+- `backend/app/api/routes/github_actions.py`: Create alerts on GitHub config missing
+
+**Key Service Methods:**
+
+```python
+# Create new alert
+AlertService.create_alert(db, request)
+
+# Create alert only if one with same title+source doesn't exist (prevents duplicates)
+AlertService.create_alert_if_not_exists(db, title, message, severity, source)
+
+# Get all alerts (paginated)
+AlertService.get_all_alerts(db, limit=50)
+
+# Get only active/unresolved alerts
+AlertService.get_active_alerts(db)
+
+# Get summary statistics
+AlertService.get_alerts_summary(db)
+
+# Mark alert as resolved
+AlertService.resolve_alert(db, alert_id)
+
+# Create 6 demo alerts for testing
+AlertService.seed_demo_alerts(db)
+```
+
+### Frontend Implementation
+
+**New Components:**
+
+- `frontend/src/components/AlertCard.jsx`: Reusable alert display component (130 lines)
+  - Props: alert object, onResolve callback, isResolving boolean
+  - Severity colors: critical=red, warning=yellow, info=blue
+  - Shows title, message, source, timestamps
+  - Resolve button for active alerts
+
+- `frontend/src/pages/Alerts.jsx`: Main alerts monitoring page (300+ lines)
+  - KPI cards showing totals
+  - Active alerts section with AlertCard components
+  - System health card with component statuses
+  - Demo seed button
+  - All alerts history table
+  - 10-second auto-refresh polling
+
+**Updated Components:**
+
+- `frontend/src/api/client.js`: Added 8 functions
+  - `getAlerts(limit)`: Fetch all alerts
+  - `getActiveAlerts()`: Fetch active only
+  - `getAlertsSummary()`: Fetch summary stats
+  - `resolveAlert(alertId)`: Mark as resolved
+  - `seedDemoAlerts()`: Create demo data
+  - `getHealth()`: Check backend API status
+  - Error handling with sensible defaults
+
+- `frontend/src/App.jsx`: Added routing for Alerts page
+
+- `frontend/src/components/Sidebar.jsx`: Enabled "Alerts" navigation item (was disabled)
+
+**Styling (150+ lines in styles.css):**
+
+- Alert card styling with severity-based border colors
+- KPI card styling specific to alerts page
+- System health grid layout (4-column)
+- Health status indicators
+- Active/resolved badges
+- Empty state messaging
+- Responsive design (1-column on mobile)
+
+### Quick Commands
+
+```bash
+# View all alerts
+curl http://localhost:8000/api/v1/alerts
+
+# View active alerts
+curl http://localhost:8000/api/v1/alerts/active
+
+# Get alerts summary
+curl http://localhost:8000/api/v1/alerts/summary
+
+# Seed demo alerts
+curl -X POST http://localhost:8000/api/v1/alerts/seed-demo
+
+# Resolve an alert (replace UUID)
+curl -X POST http://localhost:8000/api/v1/alerts/{alert_id}/resolve
+```
+
+### Testing Phase 12
+
+**1. Seed Demo Alerts**
+- Open Alerts page
+- Click "Seed Demo Alerts" button
+- Verify 6 demo alerts appear in table
+
+**2. Test Active Alerts**
+- Go to Alerts page
+- Verify active alerts section shows alerts with "Resolve" buttons
+- Click Resolve on an alert
+- Verify it moves to history with "Resolved" badge
+
+**3. Test Real Drift Alert**
+- Go to Overview page
+- Click "Calculate Drift"
+- Wait for calculation to complete
+- Go to Alerts page
+- Verify high drift alert appears (if drift is high)
+
+**4. Test GitHub Config Alert**
+- Go to Retraining page
+- Verify GitHub Actions shows "Not configured"
+- Go to Alerts page
+- Verify GitHub Actions config alert exists
+
+**5. Test System Health**
+- Go to Alerts page
+- Verify Backend API status shows green (if backend running)
+- Verify other statuses appear with proper colors
+
 ## Next Steps
 
 1. ✅ Phase 1: Project scaffold (completed)
@@ -2092,7 +2404,8 @@ POST /api/v1/github-actions/trigger-retraining - Trigger workflow
 9. ✅ Phase 9: GitHub Actions Integration (completed)
 10. ✅ Phase 10: Retraining Automation UI (completed)
 11. ✅ Phase 11: Model Registry & Promotion (completed)
-12. 🔲 Phase 12: Model serving & prediction API
+12. ✅ Phase 12: Alert System & System Health (completed)
+13. 🔲 Phase 13: Production deployment & monitoring
 
 ## Installation
 

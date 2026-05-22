@@ -5,9 +5,9 @@ const Sidebar = ({ activePage = 'overview', onPageChange = () => { } }) => {
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'retraining', label: 'Retraining', icon: '🔄' },
     { id: 'experiments', label: 'Experiments', icon: '🧪' },
+    { id: 'alerts', label: 'Alerts', icon: '🔔' },
     { id: 'models', label: 'Models', icon: '🤖', disabled: true },
     { id: 'drift', label: 'Drift Analysis', icon: '📈', disabled: true },
-    { id: 'alerts', label: 'Alerts', icon: '🔔', disabled: true },
     { id: 'settings', label: 'Settings', icon: '⚙️', disabled: true },
   ]
 

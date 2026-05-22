@@ -225,5 +225,73 @@ export const seedDemoRegistry = async () => {
   }
 }
 
+// Alerts
+export const getAlerts = async (limit = 50) => {
+  try {
+    const response = await client.get(`/api/v1/alerts?limit=${limit}`)
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch alerts:', error)
+    return { alerts: [], total_count: 0 }
+  }
+}
+
+export const getActiveAlerts = async () => {
+  try {
+    const response = await client.get('/api/v1/alerts/active')
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch active alerts:', error)
+    return { alerts: [], total_count: 0 }
+  }
+}
+
+export const getAlertsSummary = async () => {
+  try {
+    const response = await client.get('/api/v1/alerts/summary')
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch alerts summary:', error)
+    return {
+      total_alerts: 0,
+      active_alerts: 0,
+      critical_alerts: 0,
+      warning_alerts: 0,
+      info_alerts: 0,
+      resolved_alerts: 0
+    }
+  }
+}
+
+export const resolveAlert = async (alertId) => {
+  try {
+    const response = await client.post(`/api/v1/alerts/${alertId}/resolve`)
+    return response.data
+  } catch (error) {
+    console.error('Failed to resolve alert:', error)
+    return { status: 'error', message: error.message }
+  }
+}
+
+export const seedDemoAlerts = async () => {
+  try {
+    const response = await client.post('/api/v1/alerts/seed-demo')
+    return response.data
+  } catch (error) {
+    console.error('Failed to seed demo alerts:', error)
+    return { status: 'error', message: error.message }
+  }
+}
+
+export const getHealth = async () => {
+  try {
+    const response = await client.get('/health')
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch health:', error)
+    return { status: 'offline' }
+  }
+}
+
 export default client
 

@@ -6,10 +6,13 @@ Endpoints:
 - POST /api/v1/github-actions/trigger-retraining: Trigger retraining via GitHub Actions
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from app.core.database import get_db
 from app.services.github_actions_service import GitHubActionsService
+from app.services.alert_service import AlertService
 
 router = APIRouter(
     prefix="/api/v1/github-actions",
@@ -39,7 +42,7 @@ class TriggerRetrainingResponse(BaseModel):
 
 
 @router.get("/config-status", response_model=GitHubActionsConfigResponse)
-def check_github_actions_config():
+def check_github_actions_config(db: Session = Depends(get_db)):
     """
     Check if GitHub Actions is properly configured.
 
@@ -48,6 +51,17 @@ def check_github_actions_config():
     - missing: list of missing environment variables (if not configured)
     """
     is_configured, missing_vars = GitHubActionsService.is_configured()
+    
+    # Create alert if not configured
+    if not is_configured:
+        AlertService.create_alert_if_not_exists(
+            db,
+            title="GitHub Actions not configured",
+            message="GitHub Actions credentials are not set. CI/CD automation is disabled.",
+            severity="warning",
+            source="github_actions"
+        )
+    
     return GitHubActionsConfigResponse(
         configured=is_configured,
         missing=missing_vars,

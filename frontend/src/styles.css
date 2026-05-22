@@ -1131,4 +1131,197 @@ body {
   }
 }
 
+/* Alerts Page Styles */
+
+/* Alert Card */
+.alert-card {
+  background-color: #1e293b;
+  border: 2px solid #334155;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.alert-card:hover {
+  border-color: #475569;
+}
+
+.alert-card.critical {
+  border-color: #ef4444;
+}
+
+.alert-card.warning {
+  border-color: #f59e0b;
+}
+
+.alert-card.info {
+  border-color: #3b82f6;
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.alert-severity {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.alert-severity.critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.alert-severity.warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.alert-severity.info {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.alert-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.alert-message {
+  font-size: 13px;
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.alert-metadata {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.alert-button {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.alert-button:hover {
+  background-color: #2563eb;
+}
+
+.alert-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.alert-badge-resolved {
+  padding: 8px 12px;
+  background-color: #10b981;
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* System Health Card */
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.health-item {
+  padding: 12px;
+  background-color: #0f172a;
+  border-radius: 6px;
+  border: 2px solid #334155;
+}
+
+.health-item.healthy {
+  border-color: #10b981;
+}
+
+.health-item.warning {
+  border-color: #f59e0b;
+}
+
+.health-label {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.health-status {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.health-status.healthy {
+  color: #10b981;
+}
+
+.health-status.warning {
+  color: #f59e0b;
+}
+
+/* Empty State */
+.empty-alerts {
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-alerts-icon {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.empty-alerts-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #f1f5f9;
+}
+
+.empty-alerts-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+/* Active Alerts Counter */
+.active-alerts-badge {
+  display: inline-block;
+  background-color: #ef4444;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
 

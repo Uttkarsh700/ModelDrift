@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.celery_app import celery_app
 from app.core.database import SessionLocal
 from app.models.retraining_run import RetrainingRun
+from app.services.alert_service import AlertService
 
 
 @celery_app.task(name="run_retraining_task", bind=True)
@@ -64,6 +65,16 @@ def run_retraining_task(self, run_id: str):
             run.logs = logs
             run.finished_at = datetime.utcnow()
             db.commit()
+            
+            # Create alert for failed retraining
+            AlertService.create_alert_if_not_exists(
+                db,
+                title="Retraining failed",
+                message=f"Retraining run {run_id} failed. Check logs for details.",
+                severity="critical",
+                source="retraining"
+            )
+            
             raise subprocess.CalledProcessError(
                 result.returncode,
                 result.args,
@@ -76,6 +87,16 @@ def run_retraining_task(self, run_id: str):
         run.logs = f"Error: Retraining timed out after 600 seconds"
         run.finished_at = datetime.utcnow()
         db.commit()
+        
+        # Create alert for timeout
+        AlertService.create_alert_if_not_exists(
+            db,
+            title="Retraining failed",
+            message=f"Retraining run {run_id} timed out after 600 seconds.",
+            severity="critical",
+            source="retraining"
+        )
+        
         raise
 
     except Exception as e:
@@ -83,6 +104,16 @@ def run_retraining_task(self, run_id: str):
         run.logs = f"Error: {str(e)}"
         run.finished_at = datetime.utcnow()
         db.commit()
+        
+        # Create alert for general exception
+        AlertService.create_alert_if_not_exists(
+            db,
+            title="Retraining failed",
+            message=f"Retraining run {run_id} failed with error: {str(e)}",
+            severity="critical",
+            source="retraining"
+        )
+        
         raise
 
     finally:
