@@ -1,7 +1,5 @@
 # ModelDrift
 
-> ML Model Monitoring & Auto-Retraining Prototype
-
 ## Overview
 
 ModelDrift is a monorepo prototype for monitoring machine learning models in production and triggering automatic retraining when drift is detected. This is a **scaffold-only phase** with minimal business logic.
