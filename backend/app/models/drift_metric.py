@@ -13,7 +13,7 @@ class DriftMetric(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     model_name = Column(String(255), nullable=False, index=True)
     model_version = Column(String(255), nullable=False)
-    feature_name = Column(String(255), nullable=False, index=True)
+    feature_name = Column(String(255), nullable=False, index=True)  
     psi_score = Column(Float, nullable=False)
     ks_statistic = Column(Float, nullable=False)
     ks_p_value = Column(Float, nullable=False)
