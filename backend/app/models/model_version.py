@@ -42,4 +42,4 @@ class ModelVersion(Base):
     promoted_at = Column(DateTime, nullable=True)  # When promoted to production
 
     def __repr__(self):
-        return f"<ModelVersion {self.model_name} {self.model_version} ({self.stage})>"
+        return f"<ModelVersion {self.model_name} {self.model_version} ({self.stage})>"  
