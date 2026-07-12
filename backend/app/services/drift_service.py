@@ -322,3 +322,4 @@ def get_drift_summary(db: Session, model_name: str, model_version: str) -> dict:
         "low_drift_features": low_count,
         "calculated_at": latest_metrics[0].calculated_at if latest_metrics else datetime.utcnow()
     }
+  
