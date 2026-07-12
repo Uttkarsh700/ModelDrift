@@ -214,4 +214,4 @@ class AlertService:
                 }
                 for a in created_alerts
             ]
-        }
+        }  
