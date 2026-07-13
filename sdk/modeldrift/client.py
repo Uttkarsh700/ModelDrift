@@ -151,4 +151,4 @@ class ModelDriftClient:
     
     def close(self):
         """Close the underlying session."""
-        self.session.close()
+        self.session.close()  
